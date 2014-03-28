@@ -70,6 +70,8 @@ module Apartment
       #   Establish a new connection for each specific excluded model
       #
       def process_excluded_models
+        query_cache_enabled = ActiveRecord::Base.connection.query_cache_enabled
+
         # All other models will shared a connection (at ActiveRecord::Base) and we can modify at will
         Apartment.excluded_models.each do |excluded_model|
           # Note that due to rails reloading, we now take string references to classes rather than
@@ -79,14 +81,18 @@ module Apartment
             excluded_model = excluded_model.name
           end
 
-          excluded_model.constantize.establish_connection @config
+          instance = excluded_model.constantize
+          instance.establish_connection @config
+          instance.connection.enable_query_cache! if query_cache_enabled
         end
       end
 
       #   Reset the database connection to the default
       #
       def reset
+        query_cache_enabled = ActiveRecord::Base.connection.query_cache_enabled
         ActiveRecord::Base.establish_connection @config
+        ActiveRecord::Base.connection.enable_query_cache! if query_cache_enabled
       end
 
       #   Switch to new connection (or schema if appopriate)
@@ -125,8 +131,11 @@ module Apartment
       #   @param {String} database Database name
       #
       def connect_to_new(database)
+        query_cache_enabled = ActiveRecord::Base.connection.query_cache_enabled
+
         ActiveRecord::Base.establish_connection multi_tenantify(database)
         ActiveRecord::Base.connection.active?   # call active? to manually check if this connection is valid
+        ActiveRecord::Base.connection.enable_query_cache! if query_cache_enabled
 
       rescue ActiveRecord::StatementInvalid
         raise DatabaseNotFound, "The database #{environmentify(database)} cannot be found."
