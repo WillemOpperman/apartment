@@ -46,7 +46,9 @@ module Apartment
       #
       def drop(database)
         # ActiveRecord::Base.connection.drop_database   note that drop_database will not throw an exception, so manually execute
-        ActiveRecord::Base.connection.execute("DROP DATABASE #{environmentify(database)}" )
+        ActiveRecord::Base.connection.instance_exec(environmentify(database)) do |database_name|
+          execute("DROP DATABASE #{quote_table_name(database_name)};")
+        end
 
       rescue ActiveRecord::StatementInvalid
         raise DatabaseNotFound, "The database #{environmentify(database)} cannot be found"
