@@ -23,7 +23,8 @@ module Apartment
     #   See the above middleware/console declarations below to help with this.  Hope to fix that soon.
     #
     config.to_prepare do
-      Apartment::Database.init
+      # See https://github.com/influitive/apartment/pull/169/files
+      Apartment::Tenant.init unless ARGV.include? 'assets:precompile'
     end
 
     #
