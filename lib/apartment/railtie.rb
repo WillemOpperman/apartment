@@ -24,7 +24,7 @@ module Apartment
     #
     config.to_prepare do
       # See https://github.com/influitive/apartment/pull/169/files
-      Apartment::Tenant.init unless ARGV.include? 'assets:precompile'
+      Apartment::Database.init unless ARGV.include? 'assets:precompile'
     end
 
     #
